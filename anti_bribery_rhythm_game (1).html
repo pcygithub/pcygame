@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>反賄選 Beat｜單機節奏遊戲</title>
+<style>
+  :root{
+    --bg:#070914; --panel:#11162a; --line:#31f3ff; --danger:#ff4f78; --safe:#7dffb2;
+    --gold:#ffd75a; --text:#f8faff; --muted:#9ca8c7;
+  }
+  *{box-sizing:border-box}
+  html,body{width:100%;height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;overflow:hidden}
+  body{display:grid;place-items:center}
+  button{font:inherit}
+  #app{position:relative;width:min(100vw,1500px);height:min(100vh,920px);overflow:hidden;background:
+      radial-gradient(circle at 50% -20%,#26335b 0%,transparent 45%),
+      linear-gradient(180deg,#0c1022 0%,#080a13 72%,#05060b 100%);box-shadow:0 0 60px #0008}
+  #app::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 0 24.8%,#ffffff0a 25% 25.2%,transparent 25.4% 49.8%,#ffffff0a 50% 50.2%,transparent 50.4% 74.8%,#ffffff0a 75% 75.2%,transparent 75.4%);pointer-events:none}
+  .hud{position:absolute;z-index:15;top:0;left:0;right:0;height:88px;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:linear-gradient(180deg,#060812ee,#06081288,transparent)}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.04em}
+  .brand .badge{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#ff4772,#ffbd4a);box-shadow:0 0 28px #ff477244;font-size:24px}
+  .brand small{display:block;color:var(--muted);font-size:12px;font-weight:700;margin-top:2px;letter-spacing:.15em}
+  .stats{display:flex;gap:22px;text-align:right}.stat b{display:block;font-size:26px;line-height:1}.stat span{font-size:11px;color:var(--muted);letter-spacing:.12em}
+  #stage{position:absolute;inset:80px 0 0 0}
+  .lane-labels{position:absolute;z-index:3;top:16px;left:0;right:0;display:flex;justify-content:center;gap:10px;pointer-events:none}
+  .tip-chip{padding:9px 14px;border:1px solid #ffffff14;background:#0c1027aa;border-radius:999px;color:#d9def1;font-size:13px;backdrop-filter:blur(8px)}
+  #playfield{position:absolute;inset:0 4% 0 4%}
+  #hitline{position:absolute;z-index:8;left:4%;right:4%;bottom:118px;height:6px;border-radius:99px;background:var(--line);box-shadow:0 0 10px var(--line),0 0 30px #31f3ff99}
+  #hitline::after{content:"BEAT";position:absolute;left:50%;top:16px;transform:translateX(-50%);font-size:11px;font-weight:900;letter-spacing:.3em;color:#31f3ffbb}
+  #pulse{position:absolute;z-index:2;left:50%;bottom:85px;width:80px;height:80px;border:2px solid #31f3ff55;border-radius:50%;transform:translate(-50%,50%) scale(.4);opacity:0;pointer-events:none}
+  #pulse.beat{animation:pulse .35s ease-out}@keyframes pulse{0%{opacity:.8;transform:translate(-50%,50%) scale(.4)}100%{opacity:0;transform:translate(-50%,50%) scale(2)}}
+  #notes{position:absolute;inset:0;z-index:6;pointer-events:none}
+  .note{position:absolute;width:min(36vw,360px);height:66px;display:flex;align-items:center;justify-content:center;left:50%;top:0;transform:translate(-50%,-50%);border-radius:18px;font-size:clamp(21px,2.4vw,34px);font-weight:1000;letter-spacing:.08em;color:#fff;background:linear-gradient(180deg,#1b2240ee,#111629ee);border:2px solid #ffffff20;box-shadow:0 18px 45px #0008, inset 0 1px #ffffff18;will-change:transform,top,opacity}
+  .note.danger{border-color:#ff4f7855;text-shadow:0 0 15px #ff4f7866}.note.safe{border-color:#7dffb233;text-shadow:0 0 15px #7dffb244}
+  .note.hit{animation:hit .2s ease-out forwards}@keyframes hit{to{opacity:0;transform:translate(-50%,-50%) scale(1.35);filter:blur(2px)}}
+  .note.miss{animation:miss .28s ease-in forwards}@keyframes miss{to{opacity:0;transform:translate(-50%,-50%) scale(.75)}}
+  #actionBar{position:absolute;z-index:16;left:0;right:0;bottom:18px;display:flex;flex-direction:column;align-items:center;gap:10px}
+  #hitBtn{min-width:min(76vw,620px);height:76px;border:none;border-radius:22px;color:#081017;background:linear-gradient(180deg,#67fbff,#25d9ef);font-size:clamp(20px,2vw,28px);font-weight:1000;letter-spacing:.16em;box-shadow:0 12px 35px #17dffb44, inset 0 -4px #0898aa55;cursor:pointer;touch-action:manipulation}
+  #hitBtn:active,.key-down{transform:translateY(3px) scale(.99)!important;filter:brightness(1.2)}
+  .keyhint{font-size:12px;color:#aab4d2}.key{display:inline-grid;place-items:center;min-width:28px;height:24px;padding:0 8px;margin:0 4px;border:1px solid #ffffff2a;border-bottom-width:3px;border-radius:6px;background:#141a30;color:white;font-weight:900}
+  #feedback{position:absolute;z-index:14;left:50%;bottom:215px;transform:translateX(-50%);font-weight:1000;font-size:clamp(26px,4vw,58px);opacity:0;pointer-events:none;text-align:center;white-space:nowrap;text-shadow:0 8px 25px #000}
+  #feedback.show{animation:feedback .55s ease-out}@keyframes feedback{0%{opacity:0;transform:translate(-50%,20px) scale(.8)}25%{opacity:1;transform:translate(-50%,0) scale(1.05)}100%{opacity:0;transform:translate(-50%,-24px) scale(1)}}
+  #comboPop{position:absolute;z-index:10;right:7%;bottom:220px;font-size:20px;font-weight:1000;color:var(--gold);opacity:.9}
+  .overlay{position:absolute;z-index:30;inset:0;display:grid;place-items:center;padding:28px;background:radial-gradient(circle at 50% 25%,#1c2856ee 0%,#090b15f5 50%,#05060bf9 100%)}
+  .card{width:min(820px,94vw);padding:38px;border:1px solid #ffffff17;border-radius:28px;background:#0c1020cc;box-shadow:0 40px 110px #000b;backdrop-filter:blur(10px);text-align:center}
+  h1{margin:0;font-size:clamp(38px,6vw,76px);line-height:1;font-weight:1000;letter-spacing:-.04em}.accent{background:linear-gradient(90deg,#62fbff,#ff6487,#ffd35a);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{max-width:620px;margin:18px auto 0;color:#c9d1e8;font-size:clamp(16px,2vw,20px);line-height:1.7}
+  .rulebox{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0;text-align:left}.rule{padding:16px;border:1px solid #ffffff13;border-radius:16px;background:#11162a}.rule b{display:block;margin-bottom:5px}.rule.d b{color:#ff6b8b}.rule.s b{color:#7dffb2}.rule small{color:#aeb8d5;line-height:1.5}
+  .primary{border:none;border-radius:16px;padding:16px 30px;background:linear-gradient(90deg,#59f8ff,#54a8ff);color:#071019;font-weight:1000;font-size:20px;cursor:pointer;box-shadow:0 12px 30px #3ddcea33}
+  .secondary{margin-left:10px;border:1px solid #ffffff20;border-radius:16px;padding:15px 24px;background:#ffffff08;color:white;font-weight:900;cursor:pointer}
+  .smallnote{margin-top:16px;color:#7f8cab;font-size:12px;line-height:1.6}
+  #countdown{position:absolute;z-index:28;inset:0;display:none;place-items:center;font-size:min(22vw,180px);font-weight:1000;text-shadow:0 0 50px #45efff88;background:#05071166;pointer-events:none}
+  .end-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:18px;text-align:left;margin:24px 0}.score-panel,.knowledge{padding:22px;border-radius:18px;background:#11162a;border:1px solid #ffffff12}.big-score{font-size:58px;font-weight:1000;line-height:1;color:var(--gold)}.rank{font-size:24px;font-weight:1000;margin:8px 0}.knowledge h3{margin:0 0 10px}.knowledge p{margin:7px 0;color:#c4cee7;line-height:1.5}.knowledge strong{color:#fff}
+  #frenzy{position:absolute;z-index:13;left:50%;top:72px;transform:translateX(-50%);padding:8px 18px;border-radius:999px;background:#ff335ccc;border:1px solid #ffb1c2;color:white;font-weight:1000;letter-spacing:.16em;box-shadow:0 0 26px #ff335c88;animation:frenzyPulse .48s ease-in-out infinite alternate}
+  @keyframes frenzyPulse{from{transform:translateX(-50%) scale(.96);filter:brightness(.9)}to{transform:translateX(-50%) scale(1.06);filter:brightness(1.35)}}
+  #app.frenzyMode{animation:dangerGlow .5s ease-in-out infinite alternate}
+  @keyframes dangerGlow{from{box-shadow:inset 0 0 0 #ff335c00,0 0 60px #0008}to{box-shadow:inset 0 0 90px #ff335c20,0 0 60px #0008}}
+  .hidden{display:none!important}
+  @media(max-width:700px){.hud{padding:12px 14px}.brand small{display:none}.stats{gap:10px}.stat b{font-size:20px}.stat:nth-child(3){display:none}.rulebox,.end-grid{grid-template-columns:1fr}.card{padding:24px}.note{width:76vw}.tip-chip:nth-child(2){display:none}#hitline{bottom:128px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hud">
+    <div class="brand"><div class="badge">✋</div><div>反賄選 BEAT<small>VOTE FREE · PLAY CLEAN</small></div></div>
+    <div class="stats">
+      <div class="stat"><b id="score">0</b><span>SCORE</span></div>
+      <div class="stat"><b id="combo">0</b><span>COMBO</span></div>
+      <div class="stat"><b id="time">45</b><span>TIME</span></div>
+      <div class="stat"><b id="bpm">128</b><span>BPM</span></div>
+    </div>
+  </div>
+
+  <main id="stage">
+    <div class="lane-labels"><div class="tip-chip">🎯 賄選情境 → 打！</div><div class="tip-chip">🕊️ 正常民主行為 → 放過</div></div>
+    <div id="playfield"><div id="notes"></div></div>
+    <div id="hitline"></div><div id="pulse"></div>
+    <div id="feedback"></div><div id="comboPop"></div><div id="frenzy" class="hidden">⚡ FINAL 10 ⚡</div>
+    <div id="actionBar">
+      <button id="hitBtn">抓！賄！選！</button>
+      <div class="keyhint">字卡碰到藍線時按 <span class="key">SPACE</span> 或點按鈕</div>
+    </div>
+  </main>
+
+  <div id="startScreen" class="overlay">
+    <div class="card">
+      <div style="font-size:54px;margin-bottom:8px">🗳️⚡</div>
+      <h1>反賄選 <span class="accent">BEAT</span></h1>
+      <p class="lead">跟著節拍辨識可疑賄選情境。看到「以投票支持交換金錢、物品、招待或其他利益」的字卡，在它碰到判定線時把它抓出來！</p>
+      <div class="rulebox">
+        <div class="rule d"><b>🔴 要打：可疑交換</b><small>例如「紅包換票」、「送禮換支持」、「免費旅遊換票」</small></div>
+        <div class="rule s"><b>🟢 不要打：正常參與</b><small>例如「政見發表」、「公開辯論」、「自由投票」</small></div>
+      </div>
+      <button id="startBtn" class="primary">開始挑戰</button>
+      <p class="smallnote">活動版設計：45 秒／單鍵操作／無需網路／原創太鼓風緊張節奏由瀏覽器即時產生。<br>實際是否構成賄選，仍須依具體事實及法律規定判斷。</p>
+    </div>
+  </div>
+
+  <div id="countdown">3</div>
+
+  <div id="endScreen" class="overlay hidden">
+    <div class="card">
+      <h1 style="font-size:clamp(34px,5vw,60px)">挑戰完成！</h1>
+      <div class="end-grid">
+        <div class="score-panel"><div style="color:#9aa7c8;font-weight:900">FINAL SCORE</div><div id="finalScore" class="big-score">0</div><div id="rank" class="rank">反賄選新手</div><div id="accuracy" style="color:#c9d2e7">命中率 0%</div></div>
+        <div class="knowledge"><h3>記住這 3 件事</h3><p>① <strong>不收</strong>：不因投票支持接受金錢、物品、招待或其他不正利益。</p><p>② <strong>不換</strong>：選票不是交換利益的籌碼，投票應出於自由意志。</p><p>③ <strong>留意並依法檢舉</strong>：遇到可疑情況，保留相關資訊與證據，循正式管道處理。</p></div>
+      </div>
+      <button id="againBtn" class="primary">再玩一次</button><button id="soundBtn" class="secondary">音效：開</button>
+      <p class="smallnote">本遊戲為宣導互動用途，不代替個案法律判斷。</p>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  'use strict';
+  const DANGER = [
+    '紅包換票','現金買票','禮券換支持','送禮換票','招待餐宴換票','免費旅遊換票',
+    '走路工買票','補助換支持','好處換選票','送家電換票','加油券換票','代繳費用換票',
+    '幫忙投票就送','投我就有紅包','拉票成功給錢','支持就送禮'
+  ];
+  const SAFE = [
+    '政見發表','公開辯論','自由投票','依法競選','政策說明','選民服務',
+    '公開造勢','公民參與','理性問政','公平競爭','依法助選','投票自主',
+    '政策比較','候選人辯論','選舉公報','自主決定'
+  ];
+
+  const $ = s => document.querySelector(s);
+  const notesEl=$('#notes'), scoreEl=$('#score'), comboEl=$('#combo'), timeEl=$('#time');
+  const feedback=$('#feedback'), comboPop=$('#comboPop'), pulse=$('#pulse'), hitBtn=$('#hitBtn');
+  const startScreen=$('#startScreen'), endScreen=$('#endScreen'), countdown=$('#countdown');
+
+  let playing=false, muted=false, score=0, combo=0, maxCombo=0, hits=0, dangerTotal=0, falseHits=0, misses=0;
+  let notes=[], startAt=0, endAt=0, lastSpawn=0, raf=0, beatMs=680, travelMs=2850, noteSeq=0;
+  let audioCtx=null, masterGain=null, compressor=null, noiseBuffer=null;
+  let nextPercMs=0, percStep=0, lastBpm=128;
+  const hitY = () => document.querySelector('#stage').clientHeight - 118;
+
+  function audioInit(){
+    if(!audioCtx){
+      audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+      masterGain=audioCtx.createGain(); masterGain.gain.value=.72;
+      compressor=audioCtx.createDynamicsCompressor();
+      compressor.threshold.value=-12; compressor.knee.value=10; compressor.ratio.value=5; compressor.attack.value=.003; compressor.release.value=.18;
+      masterGain.connect(compressor).connect(audioCtx.destination);
+      const len=Math.floor(audioCtx.sampleRate*.35); noiseBuffer=audioCtx.createBuffer(1,len,audioCtx.sampleRate); const d=noiseBuffer.getChannelData(0);
+      for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    }
+    if(audioCtx.state==='suspended') audioCtx.resume();
+  }
+  function out(node){ node.connect(masterGain); }
+  function tone(freq=440,dur=.06,vol=.055,type='sine',when=0){
+    if(muted) return; audioInit(); const now=audioCtx.currentTime+when, o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type; o.frequency.setValueAtTime(freq,now); g.gain.setValueAtTime(vol,now); g.gain.exponentialRampToValueAtTime(.001,now+dur); o.connect(g); out(g); o.start(now); o.stop(now+dur+.02);
+  }
+  function taiko(vol=.13,accent=false){
+    if(muted) return; audioInit(); const now=audioCtx.currentTime;
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine';
+    o.frequency.setValueAtTime(accent?125:105,now); o.frequency.exponentialRampToValueAtTime(accent?48:55,now+.14);
+    g.gain.setValueAtTime(vol*(accent?1.2:1),now); g.gain.exponentialRampToValueAtTime(.001,now+.2); o.connect(g); out(g); o.start(now); o.stop(now+.22);
+    const src=audioCtx.createBufferSource(), f=audioCtx.createBiquadFilter(), ng=audioCtx.createGain(); src.buffer=noiseBuffer; f.type='bandpass'; f.frequency.value=170; f.Q.value=1.1;
+    ng.gain.setValueAtTime(vol*.55,now); ng.gain.exponentialRampToValueAtTime(.001,now+.08); src.connect(f).connect(ng); out(ng); src.start(now); src.stop(now+.09);
+  }
+  function rim(vol=.045){
+    if(muted) return; audioInit(); const now=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='square'; o.frequency.value=820;
+    g.gain.setValueAtTime(vol,now); g.gain.exponentialRampToValueAtTime(.001,now+.035); o.connect(g); out(g); o.start(now); o.stop(now+.04);
+  }
+  function hat(vol=.02){
+    if(muted) return; audioInit(); const now=audioCtx.currentTime, src=audioCtx.createBufferSource(), hp=audioCtx.createBiquadFilter(), g=audioCtx.createGain(); src.buffer=noiseBuffer; hp.type='highpass'; hp.frequency.value=5200;
+    g.gain.setValueAtTime(vol,now); g.gain.exponentialRampToValueAtTime(.001,now+.028); src.connect(hp).connect(g); out(g); src.start(now); src.stop(now+.03);
+  }
+  function bassPulse(freq=55,vol=.025){ tone(freq,.16,vol,'sawtooth'); }
+  function successSound(perfect){ tone(perfect?880:660,.08,.07,'triangle'); setTimeout(()=>tone(perfect?1320:990,.06,.04,'triangle'),45); }
+  function errorSound(){ tone(150,.12,.055,'sawtooth'); }
+  function beatVisual(){ pulse.classList.remove('beat'); void pulse.offsetWidth; pulse.classList.add('beat'); }
+  function bpmAt(elapsed){ return Math.round(128 + Math.min(44, (elapsed/45000)*44)); }
+  function percussionTick(step,bpm){
+    // 16-step original taiko-style tension groove; no external audio assets.
+    const s=step%16;
+    if(s===0){taiko(.15,true);bassPulse(55,.025);beatVisual();}
+    else if(s===4){taiko(.10,false);beatVisual();}
+    else if(s===8){taiko(.13,true);bassPulse(62,.022);beatVisual();}
+    else if(s===12){taiko(.105,false);beatVisual();}
+    if([2,6,10,14].includes(s)) rim(.036);
+    if([1,3,5,7,9,11,13,15].includes(s)) hat(bpm>150?.023:.016);
+    if(bpm>=158 && [3,7,11,15].includes(s)) rim(.025);
+  }
+  function runMusic(now,elapsed){
+    const bpm=bpmAt(elapsed); lastBpm=bpm; $('#bpm').textContent=bpm;
+    const stepMs=60000/bpm/4;
+    if(!nextPercMs) nextPercMs=now;
+    let guard=0;
+    while(now>=nextPercMs && guard++<6){ percussionTick(percStep++,bpm); nextPercMs+=stepMs; }
+  }
+
+  function reset(){
+    cancelAnimationFrame(raf); notes.forEach(n=>n.el.remove()); notes=[]; score=combo=maxCombo=hits=dangerTotal=falseHits=misses=0; noteSeq=0;
+    scoreEl.textContent='0'; comboEl.textContent='0'; timeEl.textContent='45'; $('#bpm').textContent='128'; comboPop.textContent=''; nextPercMs=0; percStep=0; lastBpm=128; $('#frenzy').classList.add('hidden'); $('#app').classList.remove('frenzyMode');
+  }
+
+  function randomWord(isDanger){ const arr=isDanger?DANGER:SAFE; return arr[Math.floor(Math.random()*arr.length)]; }
+  function spawn(scheduled){
+    const isDanger=Math.random()<0.68; if(isDanger) dangerTotal++;
+    const el=document.createElement('div'); el.className='note '+(isDanger?'danger':'safe'); el.textContent=randomWord(isDanger); notesEl.appendChild(el);
+    const xChoices=[25,38,50,62,75]; const x=xChoices[Math.floor(Math.random()*xChoices.length)]; el.style.left=x+'%';
+    notes.push({id:++noteSeq,el,isDanger,spawnAt:scheduled,hitAt:scheduled+travelMs,judged:false});
+  }
+
+  function showFeedback(text,kind){ feedback.textContent=text; feedback.style.color=kind==='good'?'#7dffb2':kind==='perfect'?'#ffd75a':'#ff6686'; feedback.classList.remove('show'); void feedback.offsetWidth; feedback.classList.add('show'); }
+  function addScore(v){ score=Math.max(0,score+v); scoreEl.textContent=score.toLocaleString(); }
+  function setCombo(v){ combo=v; maxCombo=Math.max(maxCombo,combo); comboEl.textContent=combo; comboPop.textContent=combo>=5?`${combo} COMBO!`:''; }
+
+  function judge(){
+    if(!playing) return;
+    const now=performance.now(); let best=null, bestDelta=9999;
+    for(const n of notes){ if(n.judged) continue; const d=Math.abs(now-n.hitAt); if(d<bestDelta && d<420){best=n;bestDelta=d;} }
+    if(!best){ addScore(-60); setCombo(0); falseHits++; showFeedback('太早 / 太晚！','bad'); errorSound(); return; }
+    best.judged=true;
+    if(best.isDanger){
+      const perfect=bestDelta<120; hits++; setCombo(combo+1); addScore((perfect?300:180)+Math.min(combo,20)*8); showFeedback(perfect?'PERFECT！抓到賄選':'GOOD！抓到賄選',perfect?'perfect':'good'); successSound(perfect); best.el.classList.add('hit');
+    } else {
+      falseHits++; setCombo(0); addScore(-160); showFeedback('誤判！這是正常民主行為','bad'); errorSound(); best.el.classList.add('miss');
+    }
+  }
+
+  function gameLoop(now){
+    if(!playing) return;
+    const elapsed=now-startAt, remain=Math.max(0,Math.ceil((endAt-now)/1000)); timeEl.textContent=remain;
+    runMusic(now,elapsed);
+    const currentBeat = beatMs - Math.min(170, elapsed/45000*170);
+    if(now-lastSpawn>=currentBeat){ lastSpawn=now; spawn(now); }
+    if(remain<=10){ $('#frenzy').classList.remove('hidden'); $('#app').classList.add('frenzyMode'); }
+    const yTarget=hitY();
+    for(const n of notes){
+      const p=(now-n.spawnAt)/travelMs; const y=-45 + p*(yTarget+125); n.el.style.top=y+'px';
+      const s=0.82+Math.min(1,p)*0.18; n.el.style.transform=`translate(-50%,-50%) scale(${s})`;
+      if(!n.judged && now>n.hitAt+360){ n.judged=true; if(n.isDanger){misses++;setCombo(0);addScore(-90);showFeedback('漏掉賄選！','bad');errorSound();} n.el.classList.add('miss'); }
+    }
+    notes=notes.filter(n=>{ const expired=now>n.hitAt+850; if(expired)n.el.remove(); return !expired; });
+    if(now>=endAt){ finish(); return; }
+    raf=requestAnimationFrame(gameLoop);
+  }
+
+  async function begin(){
+    reset(); audioInit(); startScreen.classList.add('hidden'); endScreen.classList.add('hidden'); countdown.style.display='grid';
+    for(const v of ['3','2','1','GO!']){ countdown.textContent=v; tone(v==='GO!'?880:440,.09,.06,'triangle'); await new Promise(r=>setTimeout(r,v==='GO!'?520:650)); }
+    countdown.style.display='none'; playing=true; startAt=performance.now(); endAt=startAt+45000; lastSpawn=startAt-beatMs; nextPercMs=startAt; percStep=0; raf=requestAnimationFrame(gameLoop);
+  }
+
+  function finish(){
+    playing=false; cancelAnimationFrame(raf); notes.forEach(n=>n.el.remove()); notes=[]; nextPercMs=0; $('#frenzy').classList.add('hidden'); $('#app').classList.remove('frenzyMode');
+    const attempts=hits+misses+falseHits; const acc=attempts?Math.round(hits/attempts*100):0;
+    $('#finalScore').textContent=score.toLocaleString(); $('#accuracy').textContent=`辨識命中率 ${acc}%｜最高 ${maxCombo} Combo`;
+    $('#rank').textContent=acc>=90?'反賄選節奏王 👑':acc>=75?'反賄選高手 🔥':acc>=55?'反賄選守門員 🛡️':'反賄選新手 🌱';
+    endScreen.classList.remove('hidden'); tone(523,.12,.05,'triangle');setTimeout(()=>tone(659,.12,.05,'triangle'),130);setTimeout(()=>tone(784,.18,.06,'triangle'),260);
+  }
+
+  $('#startBtn').addEventListener('click',begin); $('#againBtn').addEventListener('click',begin);
+  $('#soundBtn').addEventListener('click',e=>{muted=!muted;e.currentTarget.textContent='音效：'+(muted?'關':'開'); if(!muted)tone(660,.08,.05,'triangle');});
+  hitBtn.addEventListener('pointerdown',e=>{e.preventDefault();judge();});
+  window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();if(!e.repeat)judge();hitBtn.classList.add('key-down');}});
+  window.addEventListener('keyup',e=>{if(e.code==='Space')hitBtn.classList.remove('key-down');});
+})();
+</script>
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+<!-- ===== 反賄選宣導遊戲整合區塊（回主選單 / 抽獎券）===== -->
+<style>
+  .abd-home{
+    position:fixed;left:14px;top:14px;z-index:2147483000;
+    padding:9px 17px;border:0;border-radius:999px;cursor:pointer;
+    font:900 14px/1 "Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
+    color:#12305e;background:rgba(255,255,255,.93);
+    box-shadow:0 4px 14px rgba(0,0,0,.35);
+  }
+  .abd-home:hover{background:#fff;transform:translateY(-1px)}
+  /* 掛進遊戲自己的頁首列時，改成一般行內按鈕，避免蓋到標題 */
+  .abd-home.abd-inline{
+    position:static;margin-right:12px;flex:0 0 auto;
+    padding:7px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.28);
+  }
+  .abd-prize{
+    display:inline-block;margin:10px 6px 0;padding:15px 32px;border:0;border-radius:999px;
+    cursor:pointer;vertical-align:middle;
+    font:900 19px/1 "Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
+    color:#4a3000;background:linear-gradient(180deg,#ffd75c,#ffb400);
+    box-shadow:0 6px 0 #c08a00, 0 12px 24px rgba(0,0,0,.3);
+  }
+  .abd-prize:active{transform:translateY(3px);box-shadow:0 3px 0 #c08a00}
+</style>
+<script>
+window.ABD = (function () {
+  "use strict";
+  var KEY = "abd_progress_v1";
+  var HOME = "index.html";
+  var LOTTERY = "gemini-code-1788406942381.html";
+  var SLOT = "bet";
+  try {
+    var q = new URLSearchParams(location.search).get("slot");
+    if (q) SLOT = q;
+  } catch (e) {}
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }
+    catch (e) { return {}; }
+  }
+  function save(o) {
+    try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {}
+  }
+
+  var api = {
+    home: function () { location.href = HOME; },
+    lottery: function () { location.href = LOTTERY; },
+    tickets: function () { return load().tickets || 0; },
+    useTicket: function () {
+      var s = load();
+      if (!(s.tickets > 0)) return false;
+      s.tickets--; save(s); return true;
+    },
+    // 遊戲完成：同一輪裡同一款遊戲只發一張抽獎券
+    finish: function () {
+      var s = load();
+      s.done = s.done || {};
+      if (s.done[SLOT]) return false;
+      s.done[SLOT] = 1;
+      s.tickets = (s.tickets || 0) + 1;
+      save(s);
+      return true;
+    },
+    // 抽完獎後歸零，換下一位民眾重新開始
+    resetProgress: function () {
+      save({ done: {}, tickets: 0 });
+    },
+    // 在結束畫面插入「去抽獎」按鈕
+    addPrizeButton: function (anchor, where) {
+      if (!anchor) return null;
+      var host = where === "after" ? anchor.parentNode : anchor;
+      if (!host || host.querySelector(".abd-prize")) return null;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "abd-prize";
+      b.textContent = "🎁 去抽獎";
+      b.addEventListener("click", api.lottery);
+      if (where === "after") host.insertBefore(b, anchor);
+      else host.insertBefore(b, host.firstChild);
+      return b;
+    }
+  };
+
+  function mountHomeButton() {
+    if (document.querySelector(".abd-home")) return;
+    var h = document.createElement("button");
+    h.type = "button";
+    h.className = "abd-home";
+    h.textContent = "← 主選單";
+    h.addEventListener("click", api.home);
+    // 遊戲本身有頁首列的話就掛進去，沒有才浮在左上角
+    var bar = "" ? document.querySelector("") : null;
+    if (bar) {
+      h.classList.add("abd-inline");
+      bar.insertBefore(h, bar.firstChild);
+    } else {
+      document.body.appendChild(h);
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mountHomeButton);
+  } else {
+    mountHomeButton();
+  }
+
+  return api;
+})();
+</script>
+<script>
+
+document.head.insertAdjacentHTML('beforeend','<style>.hud{padding-left:118px !important}@media(max-width:700px){.hud{padding-left:104px !important}}</style>');
+(function () {
+  var end = document.getElementById('endScreen');
+  if (!end) return;
+  function onEnd() {
+    if (end.classList.contains('hidden')) return;
+    ABD.finish();
+    var again = document.getElementById('againBtn');
+    if (again && !again.parentNode.querySelector('.abd-prize')) {
+      ABD.addPrizeButton(again, 'after');
+      again.className = 'secondary';
+    }
+  }
+  new MutationObserver(onEnd).observe(end, { attributes: true, attributeFilter: ['class'] });
+  onEnd();
+})();
+
+</script>
+</body>
+</html>

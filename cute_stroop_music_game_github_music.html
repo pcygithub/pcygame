@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src https: data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';">
+<title>彩虹腦袋大挑戰 🌈</title>
+<style>
+  :root{
+    --bg1:#fff7fb;
+    --bg2:#eef8ff;
+    --card:rgba(255,255,255,.88);
+    --ink:#51475f;
+    --muted:#8b8099;
+    --pink:#ff8fbd;
+    --blue:#84c9ff;
+    --yellow:#ffd86f;
+    --mint:#8fe0c2;
+    --lav:#c7a8ff;
+    --shadow:0 18px 50px rgba(117,92,140,.16);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 10% 20%, rgba(255,177,211,.45), transparent 28%),
+      radial-gradient(circle at 90% 10%, rgba(148,213,255,.42), transparent 26%),
+      radial-gradient(circle at 85% 90%, rgba(160,235,210,.35), transparent 28%),
+      linear-gradient(135deg,var(--bg1),var(--bg2));
+    overflow-x:hidden;
+  }
+  .floaty{
+    position:fixed;
+    opacity:.25;
+    pointer-events:none;
+    animation:float 7s ease-in-out infinite;
+    font-size:38px;
+  }
+  .f1{left:5%;top:12%}
+  .f2{right:7%;top:18%;animation-delay:1.5s}
+  .f3{left:8%;bottom:10%;animation-delay:3s}
+  .f4{right:5%;bottom:11%;animation-delay:4.5s}
+  @keyframes float{50%{transform:translateY(-18px) rotate(8deg)}}
+  .wrap{
+    width:min(940px,92vw);
+    margin:0 auto;
+    padding:34px 0 48px;
+  }
+  header{text-align:center;margin-bottom:20px}
+  h1{
+    margin:0;
+    font-size:clamp(28px,5vw,50px);
+    letter-spacing:1px;
+    text-shadow:0 4px 0 #fff;
+  }
+  .sub{color:var(--muted);margin-top:8px;font-size:15px}
+  .panel{
+    background:var(--card);
+    border:1px solid rgba(255,255,255,.9);
+    box-shadow:var(--shadow);
+    border-radius:28px;
+    padding:20px;
+    backdrop-filter:blur(12px);
+  }
+  .topbar{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .stat{
+    background:#fff;
+    border-radius:18px;
+    padding:12px 10px;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(99,75,120,.08);
+  }
+  .stat b{display:block;font-size:22px;margin-top:3px}
+  .label{font-size:12px;color:var(--muted)}
+  .game{
+    position:relative;
+    min-height:470px;
+    border-radius:24px;
+    background:
+      linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.82)),
+      repeating-linear-gradient(45deg,#ffe9f3 0 14px,#edf7ff 14px 28px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    padding:26px;
+  }
+  .mascot{
+    font-size:56px;
+    filter:drop-shadow(0 8px 6px rgba(0,0,0,.08));
+    animation:bob 1.2s ease-in-out infinite;
+  }
+  @keyframes bob{50%{transform:translateY(-8px)}}
+  .instruction{
+    margin-top:6px;
+    font-size:14px;
+    color:var(--muted);
+    text-align:center;
+  }
+  .word{
+    margin:22px 0 20px;
+    font-size:clamp(64px,12vw,126px);
+    font-weight:900;
+    letter-spacing:8px;
+    text-shadow:
+      0 5px 0 rgba(255,255,255,.9),
+      0 10px 24px rgba(63,50,75,.14);
+    transition:transform .18s ease, opacity .18s ease;
+    user-select:none;
+  }
+  .word.pop{animation:pop .25s ease}
+  @keyframes pop{
+    0%{transform:scale(.7);opacity:.2}
+    70%{transform:scale(1.1)}
+    100%{transform:scale(1);opacity:1}
+  }
+  .beat{
+    width:min(520px,90%);
+    display:flex;
+    gap:9px;
+    justify-content:center;
+    margin-bottom:20px;
+  }
+  .beat i{
+    width:16px;height:16px;border-radius:50%;
+    background:#e7dff0;
+    transition:.12s;
+  }
+  .beat i.on{
+    transform:scale(1.35);
+    background:var(--pink);
+    box-shadow:0 0 0 6px rgba(255,143,189,.15);
+  }
+  .answers{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    width:min(680px,100%);
+  }
+  button{
+    border:0;
+    cursor:pointer;
+    font:inherit;
+  }
+  .answer{
+    border-radius:18px;
+    padding:14px 10px;
+    font-weight:800;
+    background:white;
+    box-shadow:0 8px 18px rgba(70,55,86,.1);
+    transition:.16s ease;
+  }
+  .answer:hover{transform:translateY(-3px)}
+  .answer:active{transform:scale(.97)}
+  .answer.red{color:#ff5574}
+  .answer.blue{color:#3497e8}
+  .answer.green{color:#35b783}
+  .answer.yellow{color:#e0a900}
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    margin-top:16px;
+  }
+  .primary,.secondary{
+    padding:12px 18px;
+    border-radius:16px;
+    font-weight:800;
+  }
+  .primary{background:linear-gradient(135deg,#ff91be,#be9cff);color:#fff}
+  .secondary{background:#fff;color:var(--ink);box-shadow:0 6px 14px rgba(0,0,0,.08)}
+  .settings{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .setting{
+    background:#fff;
+    padding:13px 14px;
+    border-radius:16px;
+  }
+  .setting label{font-size:13px;color:var(--muted)}
+  input[type=range]{width:100%;accent-color:#ba8cff}
+  select{
+    width:100%;margin-top:7px;padding:10px 12px;border:1px solid #eadff3;
+    border-radius:12px;background:white;color:var(--ink)
+  }
+  .toast{
+    position:absolute;
+    top:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(-20px);
+    opacity:0;
+    background:#fff;
+    border-radius:999px;
+    padding:10px 16px;
+    box-shadow:0 10px 25px rgba(0,0,0,.12);
+    font-weight:900;
+    pointer-events:none;
+  }
+  .toast.show{animation:toast .75s ease}
+  @keyframes toast{
+    0%{opacity:0;transform:translateX(-50%) translateY(-15px) scale(.8)}
+    25%,70%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+    100%{opacity:0;transform:translateX(-50%) translateY(-8px)}
+  }
+  .progress{
+    width:min(680px,100%);
+    height:10px;
+    background:#eee5f4;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:16px;
+  }
+  .bar{
+    height:100%;
+    width:100%;
+    background:linear-gradient(90deg,#8fe0c2,#84c9ff,#c7a8ff,#ff8fbd);
+    transform-origin:left;
+  }
+  .footer-note{
+    text-align:center;
+    margin-top:13px;
+    color:var(--muted);
+    font-size:12px;
+  }
+  .overlay{
+    position:absolute;inset:0;
+    background:rgba(255,255,255,.9);
+    display:flex;align-items:center;justify-content:center;
+    z-index:5;
+    text-align:center;
+    padding:30px;
+  }
+  .overlay.hidden{display:none}
+  .box{max-width:520px}
+  .box h2{font-size:32px;margin:6px 0}
+  .box p{color:var(--muted);line-height:1.7}
+  .bigbtn{
+    margin-top:10px;
+    padding:14px 24px;border-radius:18px;
+    background:linear-gradient(135deg,#ff8fbd,#8ecfff);
+    color:#fff;font-weight:900;font-size:18px;
+    box-shadow:0 10px 24px rgba(183,126,200,.25)
+  }
+  .hint{
+    background:#fff6cc;
+    border:1px solid #ffe68a;
+    padding:9px 12px;
+    border-radius:13px;
+    color:#806a13;
+    font-size:13px;
+  }
+  @media(max-width:650px){
+    .topbar{grid-template-columns:1fr 1fr}
+    .answers{grid-template-columns:1fr 1fr}
+    .settings{grid-template-columns:1fr}
+    .game{min-height:520px;padding:18px}
+  }
+</style>
+</head>
+<body>
+  <div class="floaty f1">🌸</div>
+  <div class="floaty f2">⭐</div>
+  <div class="floaty f3">🍭</div>
+  <div class="floaty f4">🌈</div>
+
+  
+  <!-- 線上背景音樂：需網路連線 -->
+  <audio id="bgm" preload="metadata" loop>
+    <source src="https://raw.githubusercontent.com/uncle-sheepsky/duru-ai-cc0-bgm/main/mp3/duru-arcade-vibe.mp3" type="audio/mpeg">
+  </audio>
+
+  <main class="wrap">
+    <header>
+      <h1>🌈 彩虹腦袋大挑戰</h1>
+      <div class="sub">不要念文字，要選「文字真正顯示的顏色」！跟著節奏一起玩 ♫</div>
+    </header>
+
+    <section class="panel">
+      <div class="topbar">
+        <div class="stat"><span class="label">分數</span><b id="score">0</b></div>
+        <div class="stat"><span class="label">連擊</span><b id="combo">0</b></div>
+        <div class="stat"><span class="label">最高連擊</span><b id="best">0</b></div>
+        <div class="stat"><span class="label">剩餘題數</span><b id="left">20</b></div>
+      </div>
+
+      <div class="game">
+        <div class="toast" id="toast">答對啦 ✨</div>
+
+        <div class="overlay" id="overlay">
+          <div class="box">
+            <div style="font-size:72px">🐰🎧</div>
+            <h2>準備好動動腦了嗎？</h2>
+            <p>
+              看到「紅」但字體是藍色，就要按「藍」！<br>
+              音樂會跟著節拍播放，越快越刺激。
+            </p>
+            <div class="hint">瀏覽器規定：必須先點一次按鈕，音樂才能播放。</div>
+            <button class="bigbtn" id="startBtn">開始挑戰 ♫</button>
+          </div>
+        </div>
+
+        <div class="mascot" id="mascot">🐣</div>
+        <div class="instruction">請選擇「字體顏色」，不要選文字意思</div>
+        <div class="word" id="word">紅</div>
+
+        <div class="beat" id="beat">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+
+        <div class="answers">
+          <button class="answer red" data-color="red">🔴 紅色</button>
+          <button class="answer blue" data-color="blue">🔵 藍色</button>
+          <button class="answer green" data-color="green">🟢 綠色</button>
+          <button class="answer yellow" data-color="yellow">🟡 黃色</button>
+        </div>
+
+        <div class="progress"><div class="bar" id="bar"></div></div>
+      </div>
+
+      <div class="controls">
+        <button class="primary" id="pauseBtn">⏸ 暫停</button>
+        <button class="secondary" id="musicBtn">🎵 音樂：開</button>
+        <button class="secondary" id="restartBtn">🔄 重新開始</button>
+      </div>
+
+      <div class="settings">
+        <div class="setting">
+          <label>🎚 答題節奏：<span id="bpmText">105 BPM</span></label>
+          <input id="bpm" type="range" min="70" max="160" value="105">
+        </div>
+        <div class="setting">
+          <label>🎮 遊戲模式</label>
+          <select id="mode">
+            <option value="normal">一般：混合一致與衝突</option>
+            <option value="hard">困難：幾乎都是衝突色</option>
+            <option value="cute">療癒：反應時間較長</option>
+          </select>
+        </div>
+        <div class="setting">
+          <label>🎧 線上背景音樂</label>
+          <select id="track">
+            <option value="https://raw.githubusercontent.com/uncle-sheepsky/duru-ai-cc0-bgm/main/mp3/duru-arcade-vibe.mp3">Arcade Vibe 🎮</option>
+            <option value="https://raw.githubusercontent.com/uncle-sheepsky/duru-ai-cc0-bgm/main/mp3/hyak-ep1-rhythm.mp3">Rhythm Game 🥁</option>
+            <option value="https://raw.githubusercontent.com/uncle-sheepsky/duru-ai-cc0-bgm/main/mp3/duru-roomscene-lofi.mp3">Cute Lo-fi ☁️</option>
+          </select>
+        </div>
+        <div class="setting">
+          <label>🔊 背景音量：<span id="volumeText">22%</span></label>
+          <input id="volume" type="range" min="0" max="100" value="22">
+        </div>
+      </div>
+
+      <div class="footer-note">
+        單一 HTML・零外部套件・背景音樂：GitHub CC0 線上 MP3・答題音效由 Web Audio API 即時產生
+        <br><span id="protocolStatus"></span>
+      </div>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const colors = [
+    { key:'red',    word:'紅', css:'#ff5574' },
+    { key:'blue',   word:'藍', css:'#3497e8' },
+    { key:'green',  word:'綠', css:'#35b783' },
+    { key:'yellow', word:'黃', css:'#e0a900' }
+  ];
+
+  const wordEl = document.getElementById('word');
+  const scoreEl = document.getElementById('score');
+  const comboEl = document.getElementById('combo');
+  const bestEl = document.getElementById('best');
+  const leftEl = document.getElementById('left');
+  const barEl = document.getElementById('bar');
+  const toast = document.getElementById('toast');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const musicBtn = document.getElementById('musicBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const bpmRange = document.getElementById('bpm');
+  const bpmText = document.getElementById('bpmText');
+  const modeSel = document.getElementById('mode');
+  const bgm = document.getElementById('bgm');
+  const trackSel = document.getElementById('track');
+  const volumeRange = document.getElementById('volume');
+  const volumeText = document.getElementById('volumeText');
+  const mascot = document.getElementById('mascot');
+  const beatDots = [...document.querySelectorAll('.beat i')];
+  const protocolStatus = document.getElementById('protocolStatus');
+
+  // 顯示目前執行方式。file:// 可正常使用；這只是方便判斷環境。
+  if (location.protocol === 'file:') {
+    protocolStatus.textContent = '目前：本機檔案模式 file:// ✓';
+  } else {
+    protocolStatus.textContent = '目前：' + location.protocol + '// 模式 ✓';
+  }
+  const answerBtns = [...document.querySelectorAll('.answer')];
+
+  let score = 0, combo = 0, best = 0;
+  let rounds = 20, currentRound = 0;
+  let currentAnswer = null;
+  let playing = false, paused = false, musicOn = true;
+  let questionTimer = null, beatTimer = null, beatIndex = 0;
+  let audioCtx = null, master = null;
+  let musicStep = 0;
+  bgm.volume = Number(volumeRange.value) / 100;
+
+  function initAudio(){
+    if(audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    master = audioCtx.createGain();
+    master.gain.value = 0.18;
+    master.connect(audioCtx.destination);
+  }
+
+  function tone(freq, dur=.12, type='sine', vol=.22, delay=0){
+    if(!audioCtx || !musicOn) return;
+    const now = audioCtx.currentTime + delay;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(vol, now + .01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    osc.connect(gain); gain.connect(master);
+    osc.start(now); osc.stop(now + dur + .03);
+  }
+
+  function clickSound(){
+    tone(1046,.08,'sine',.13);
+  }
+
+  function correctSound(){
+    tone(659,.09,'sine',.17);
+    tone(784,.10,'sine',.16,.08);
+    tone(1046,.13,'sine',.15,.16);
+  }
+
+  function wrongSound(){
+    tone(220,.11,'square',.11);
+    tone(174,.17,'square',.09,.08);
+  }
+
+  function playBgm(){
+    if(!musicOn || !playing || paused) return;
+    bgm.volume = Number(volumeRange.value) / 100;
+    const p = bgm.play();
+    if(p && typeof p.catch === 'function'){
+      p.catch(() => {
+        showToast('點一下畫面即可啟用線上音樂 🎵');
+      });
+    }
+  }
+
+  function pauseBgm(){
+    bgm.pause();
+  }
+
+  function changeTrack(url){
+    const wasPlaying = !bgm.paused && musicOn && playing && !paused;
+    bgm.pause();
+    bgm.src = url;
+    bgm.load();
+    if(wasPlaying) playBgm();
+  }
+
+  function beatSound(step){
+    // 背景音樂已改為線上 MP3；節拍點只保留視覺效果。
+  }
+
+  function stopTimers(){
+    clearInterval(beatTimer);
+    clearTimeout(questionTimer);
+  }
+
+  function restartBeat(){
+    clearInterval(beatTimer);
+    if(!playing || paused) return;
+    const bpm = Number(bpmRange.value);
+    const interval = 60000 / bpm;
+    beatTimer = setInterval(() => {
+      beatDots.forEach(x=>x.classList.remove('on'));
+      beatDots[beatIndex % beatDots.length].classList.add('on');
+      beatSound(musicStep++);
+      beatIndex++;
+    }, interval);
+  }
+
+  function getQuestionDuration(){
+    const bpm = Number(bpmRange.value);
+    const base = 60000 / bpm;
+    const mode = modeSel.value;
+    if(mode === 'cute') return Math.max(2300, base * 4.8);
+    if(mode === 'hard') return Math.max(1150, base * 2.6);
+    return Math.max(1500, base * 3.4);
+  }
+
+  function chooseQuestion(){
+    const word = colors[Math.floor(Math.random()*colors.length)];
+    let ink;
+
+    if(modeSel.value === 'hard'){
+      const others = colors.filter(c=>c.key !== word.key);
+      ink = others[Math.floor(Math.random()*others.length)];
+    } else {
+      const congruentChance = modeSel.value === 'cute' ? .45 : .28;
+      if(Math.random() < congruentChance){
+        ink = word;
+      } else {
+        const others = colors.filter(c=>c.key !== word.key);
+        ink = others[Math.floor(Math.random()*others.length)];
+      }
+    }
+    return {word, ink};
+  }
+
+  function showToast(text){
+    toast.textContent = text;
+    toast.classList.remove('show');
+    void toast.offsetWidth;
+    toast.classList.add('show');
+  }
+
+  function newQuestion(){
+    if(!playing || paused) return;
+
+    if(currentRound >= rounds){
+      endGame();
+      return;
+    }
+
+    currentRound++;
+    leftEl.textContent = rounds - currentRound + 1;
+
+    const q = chooseQuestion();
+    currentAnswer = q.ink.key;
+
+    wordEl.textContent = q.word.word;
+    wordEl.style.color = q.ink.css;
+    wordEl.classList.remove('pop');
+    void wordEl.offsetWidth;
+    wordEl.classList.add('pop');
+
+    mascot.textContent = ['🐣','🐰','🐻','🐱','🐼','🦊'][Math.floor(Math.random()*6)];
+
+    clearTimeout(questionTimer);
+    const duration = getQuestionDuration();
+    const started = performance.now();
+
+    function animateBar(){
+      if(!playing || paused) return;
+      const elapsed = performance.now() - started;
+      const pct = Math.max(0, 1 - elapsed/duration);
+      barEl.style.transform = `scaleX(${pct})`;
+      if(pct > 0) requestAnimationFrame(animateBar);
+    }
+    requestAnimationFrame(animateBar);
+
+    questionTimer = setTimeout(()=>{
+      if(!playing || paused) return;
+      combo = 0;
+      comboEl.textContent = combo;
+      showToast('時間到～ 🐢');
+      wrongSound();
+      setTimeout(newQuestion, 420);
+    }, duration);
+  }
+
+  function answer(color){
+    if(!playing || paused || !currentAnswer) return;
+    clearTimeout(questionTimer);
+    clickSound();
+
+    if(color === currentAnswer){
+      combo++;
+      best = Math.max(best,combo);
+      score += 100 + Math.min(combo*10,150);
+      showToast(combo >= 5 ? `連擊 ${combo}！太強啦 ✨` : '答對啦 ✨');
+      correctSound();
+    }else{
+      combo = 0;
+      score = Math.max(0,score-25);
+      showToast('啊～被文字騙到了 😵‍💫');
+      wrongSound();
+    }
+
+    scoreEl.textContent = score;
+    comboEl.textContent = combo;
+    bestEl.textContent = best;
+    currentAnswer = null;
+    setTimeout(newQuestion, 340);
+  }
+
+  function startGame(){
+    initAudio();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+
+    overlay.classList.add('hidden');
+    score = 0; combo = 0; best = 0; currentRound = 0;
+    scoreEl.textContent = 0;
+    comboEl.textContent = 0;
+    bestEl.textContent = 0;
+    leftEl.textContent = rounds;
+    playing = true;
+    paused = false;
+    pauseBtn.textContent = '⏸ 暫停';
+    beatIndex = 0; musicStep = 0;
+    restartBeat();
+    playBgm();
+    newQuestion();
+  }
+
+  function endGame(){
+    playing = false;
+    stopTimers();
+    pauseBgm();
+    beatDots.forEach(x=>x.classList.remove('on'));
+    overlay.classList.remove('hidden');
+    overlay.querySelector('.box').innerHTML = `
+      <div style="font-size:72px">${score>=1800?'🏆🌈':score>=1200?'🎉🐰':'🐣💗'}</div>
+      <h2>挑戰完成！</h2>
+      <p>你的分數：<b style="font-size:26px;color:#a16ee8">${score}</b><br>
+      最高連擊：<b>${best}</b></p>
+      <button class="bigbtn" id="againBtn">再玩一次 ♫</button>
+    `;
+    document.getElementById('againBtn').onclick = startGame;
+  }
+
+  function togglePause(){
+    if(!playing) return;
+    paused = !paused;
+    if(paused){
+      stopTimers();
+      pauseBgm();
+      pauseBtn.textContent = '▶ 繼續';
+      showToast('休息一下 ☕');
+    } else {
+      pauseBtn.textContent = '⏸ 暫停';
+      restartBeat();
+      playBgm();
+      newQuestion();
+    }
+  }
+
+  startBtn.addEventListener('click', startGame);
+  pauseBtn.addEventListener('click', togglePause);
+  restartBtn.addEventListener('click', startGame);
+
+  musicBtn.addEventListener('click',()=>{
+    musicOn = !musicOn;
+    musicBtn.textContent = musicOn ? '🎵 音樂：開' : '🔇 音樂：關';
+    if(musicOn){
+      initAudio();
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      playBgm();
+      correctSound();
+    } else {
+      pauseBgm();
+    }
+  });
+
+  bpmRange.addEventListener('input',()=>{
+    bpmText.textContent = bpmRange.value + ' BPM';
+    restartBeat();
+  });
+
+  trackSel.addEventListener('change',()=>{
+    changeTrack(trackSel.value);
+  });
+
+  volumeRange.addEventListener('input',()=>{
+    bgm.volume = Number(volumeRange.value) / 100;
+    volumeText.textContent = volumeRange.value + '%';
+  });
+
+  bgm.addEventListener('error',()=>{
+    showToast('音樂載入失敗，可能是網路封鎖 GitHub Raw 🌐');
+  });
+
+  answerBtns.forEach(btn=>{
+    btn.addEventListener('click',()=>answer(btn.dataset.color));
+  });
+
+  document.addEventListener('keydown',(e)=>{
+    const map = { '1':'red','2':'blue','3':'green','4':'yellow' };
+    if(map[e.key]) answer(map[e.key]);
+    if(e.code === 'Space'){
+      e.preventDefault();
+      togglePause();
+    }
+  });
+})();
+</script>
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+
+<!-- ABD_INTEGRATION_V1 -->
+<!-- ===== 反賄選宣導遊戲整合區塊（回主選單 / 抽獎券）===== -->
+<style>
+  .abd-home{
+    position:fixed;left:14px;top:14px;z-index:2147483000;
+    padding:9px 17px;border:0;border-radius:999px;cursor:pointer;
+    font:900 14px/1 "Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
+    color:#12305e;background:rgba(255,255,255,.93);
+    box-shadow:0 4px 14px rgba(0,0,0,.35);
+  }
+  .abd-home:hover{background:#fff;transform:translateY(-1px)}
+  /* 掛進遊戲自己的頁首列時，改成一般行內按鈕，避免蓋到標題 */
+  .abd-home.abd-inline{
+    position:static;margin-right:12px;flex:0 0 auto;
+    padding:7px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.28);
+  }
+  .abd-prize{
+    display:inline-block;margin:10px 6px 0;padding:15px 32px;border:0;border-radius:999px;
+    cursor:pointer;vertical-align:middle;
+    font:900 19px/1 "Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
+    color:#4a3000;background:linear-gradient(180deg,#ffd75c,#ffb400);
+    box-shadow:0 6px 0 #c08a00, 0 12px 24px rgba(0,0,0,.3);
+  }
+  .abd-prize:active{transform:translateY(3px);box-shadow:0 3px 0 #c08a00}
+</style>
+<script>
+window.ABD = (function () {
+  "use strict";
+  var KEY = "abd_progress_v1";
+  var HOME = "index.html";
+  var LOTTERY = "gemini-code-1788406942381.html";
+  var SLOT = "share";
+  try {
+    var q = new URLSearchParams(location.search).get("slot");
+    if (q) SLOT = q;
+  } catch (e) {}
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }
+    catch (e) { return {}; }
+  }
+  function save(o) {
+    try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {}
+  }
+
+  var api = {
+    home: function () { location.href = HOME; },
+    lottery: function () { location.href = LOTTERY; },
+    tickets: function () { return load().tickets || 0; },
+    useTicket: function () {
+      var s = load();
+      if (!(s.tickets > 0)) return false;
+      s.tickets--; save(s); return true;
+    },
+    // 遊戲完成：同一輪裡同一款遊戲只發一張抽獎券
+    finish: function () {
+      var s = load();
+      s.done = s.done || {};
+      if (s.done[SLOT]) return false;
+      s.done[SLOT] = 1;
+      s.tickets = (s.tickets || 0) + 1;
+      save(s);
+      return true;
+    },
+    // 抽完獎後歸零，換下一位民眾重新開始
+    resetProgress: function () {
+      save({ done: {}, tickets: 0 });
+    },
+    // 在結束畫面插入「去抽獎」按鈕
+    addPrizeButton: function (anchor, where) {
+      if (!anchor) return null;
+      var host = where === "after" ? anchor.parentNode : anchor;
+      if (!host || host.querySelector(".abd-prize")) return null;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "abd-prize";
+      b.textContent = "🎁 去抽獎";
+      b.addEventListener("click", api.lottery);
+      if (where === "after") host.insertBefore(b, anchor);
+      else host.insertBefore(b, host.firstChild);
+      return b;
+    }
+  };
+
+  function mountHomeButton() {
+    if (document.querySelector(".abd-home")) return;
+    var h = document.createElement("button");
+    h.type = "button";
+    h.className = "abd-home";
+    h.textContent = "← 主選單";
+    h.addEventListener("click", api.home);
+    // 遊戲本身有頁首列的話就掛進去，沒有才浮在左上角
+    var bar = "" ? document.querySelector("") : null;
+    if (bar) {
+      h.classList.add("abd-inline");
+      bar.insertBefore(h, bar.firstChild);
+    } else {
+      document.body.appendChild(h);
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mountHomeButton);
+  } else {
+    mountHomeButton();
+  }
+
+  return api;
+})();
+</script>
+<script>
+
+(function () {
+  var ov = document.getElementById('overlay');
+  if (!ov) return;
+  function onEnd() {
+    var again = document.getElementById('againBtn');
+    if (!again || again.parentNode.querySelector('.abd-prize')) return;
+    ABD.finish();
+    ABD.addPrizeButton(again, 'after');
+  }
+  new MutationObserver(onEnd).observe(ov, { childList: true, subtree: true });
+  onEnd();
+})();
+
+</script>
+</body>
+</html>
